@@ -1,26 +1,36 @@
 # AgentLens Skill
 
-Use AgentLens to introspect OpenClaw behavior through local HTTP APIs on `http://localhost:47777`.
+Use AgentLens API on `http://localhost:47777`.
+
+## Login + Linking prerequisite
+
+1. Human logs into AgentLens web UI by email code.
+2. Human generates pair code in UI.
+3. Agent runs:
+
+```bash
+curl -X POST http://localhost:47777/api/agents/connect \
+  -H 'Content-Type: application/json' \
+  -d '{"pair_code":"<pair_code>","agent_id":"openclaw-main","display_name":"OpenClaw Main"}'
+```
+
+Store returned `api_key` and send it in `x-agent-key` for ingest endpoints.
 
 ## Capabilities
 
 1. **Tool usage stats**
-   - Ask: "what tools have I used today?"
-   - Call: `GET /api/tools/stats`
-   - Summarize top tools, success rates, and stale tools.
-
+   - `GET /api/tools/stats` (with user Bearer token)
 2. **Memory health checks**
-   - Ask: "are there any memory flags?"
-   - Call: `GET /api/memory/files`
-   - If flagged files exist, inspect with `GET /api/memory/file?path=<encoded_path>`.
+   - `GET /api/memory/files`
+   - `GET /api/memory/file?path=<encoded_path>`
+3. **Recent timeline**
+   - `GET /api/events?since=<now_minus_1h>&limit=200`
 
-3. **Recent activity timeline**
-   - Ask: "what did I do in the last hour?"
-   - Call: `GET /api/events?since=<now_minus_1h>&limit=200`
-   - Group by event type and include tool call outcomes.
+## Agent event ingest
 
-## Usage Notes
-
-- AgentLens is local-first and has no auth by default.
-- If the API is down, report: `AgentLens not reachable at http://localhost:47777`.
-- Prefer concise summaries with timestamps, session IDs, and anomalies.
+```bash
+curl -X POST http://localhost:47777/api/agents/ingest/event \
+  -H "Content-Type: application/json" \
+  -H "x-agent-key: <api_key>" \
+  -d '{"session_id":"s1","timestamp":1710000000000,"type":"gen_ai.tool.call","raw":"{}"}'
+```

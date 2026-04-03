@@ -1,29 +1,40 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiGet } from '../lib/api';
 
-export const useStatus = () =>
-  useQuery({ queryKey: ['status'], queryFn: () => apiGet<any>('/api/status'), refetchInterval: 3000 });
+const q = (agentId?: string) => (agentId ? `?agent_id=${encodeURIComponent(agentId)}` : '');
 
-export const useEvents = (type?: string) =>
+export const useMe = (enabled: boolean) =>
+  useQuery({ queryKey: ['me'], queryFn: () => apiGet<any>('/api/auth/me'), enabled });
+
+export const useStatus = (agentId?: string, enabled = true) =>
+  useQuery({ queryKey: ['status', agentId], queryFn: () => apiGet<any>(`/api/status${q(agentId)}`), refetchInterval: 3000, enabled });
+
+export const useEvents = (agentId?: string, type?: string, enabled = true) =>
   useQuery({
-    queryKey: ['events', type],
-    queryFn: () => apiGet<any>(`/api/events?limit=300${type ? `&type=${type}` : ''}`),
-    refetchInterval: 5000
+    queryKey: ['events', agentId, type],
+    queryFn: () => apiGet<any>(`/api/events?limit=300${agentId ? `&agent_id=${encodeURIComponent(agentId)}` : ''}${type ? `&type=${type}` : ''}`),
+    refetchInterval: 5000,
+    enabled
   });
 
-export const useToolStats = () =>
-  useQuery({ queryKey: ['tools-stats'], queryFn: () => apiGet<any>('/api/tools/stats'), refetchInterval: 5000 });
+export const useToolStats = (agentId?: string, enabled = true) =>
+  useQuery({ queryKey: ['tools-stats', agentId], queryFn: () => apiGet<any>(`/api/tools/stats${q(agentId)}`), refetchInterval: 5000, enabled });
 
-export const useToolTimeline = () =>
-  useQuery({ queryKey: ['tools-timeline'], queryFn: () => apiGet<any>('/api/tools/timeline?hours=24'), refetchInterval: 5000 });
-
-export const useMemoryFiles = () =>
-  useQuery({ queryKey: ['memory-files'], queryFn: () => apiGet<any>('/api/memory/files'), refetchInterval: 8000 });
-
-export const useMemoryFile = (filePath?: string) =>
+export const useToolTimeline = (agentId?: string, enabled = true) =>
   useQuery({
-    queryKey: ['memory-file', filePath],
-    queryFn: () => apiGet<any>(`/api/memory/file?path=${encodeURIComponent(filePath ?? '')}`),
-    enabled: Boolean(filePath),
+    queryKey: ['tools-timeline', agentId],
+    queryFn: () => apiGet<any>(`/api/tools/timeline?hours=24${agentId ? `&agent_id=${encodeURIComponent(agentId)}` : ''}`),
+    refetchInterval: 5000,
+    enabled
+  });
+
+export const useMemoryFiles = (agentId?: string, enabled = true) =>
+  useQuery({ queryKey: ['memory-files', agentId], queryFn: () => apiGet<any>(`/api/memory/files${q(agentId)}`), refetchInterval: 8000, enabled });
+
+export const useMemoryFile = (filePath?: string, agentId?: string, enabled = true) =>
+  useQuery({
+    queryKey: ['memory-file', filePath, agentId],
+    queryFn: () => apiGet<any>(`/api/memory/file?path=${encodeURIComponent(filePath ?? '')}${agentId ? `&agent_id=${encodeURIComponent(agentId)}` : ''}`),
+    enabled: enabled && Boolean(filePath),
     refetchInterval: 8000
   });

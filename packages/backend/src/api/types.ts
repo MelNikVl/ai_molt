@@ -20,10 +20,12 @@ export interface EventRow {
   success: number | null;
   duration_ms: number | null;
   raw: string;
+  agent_id: string | null;
 }
 
 export interface ToolStatRow {
   tool_name: string;
+  agent_id: string;
   call_count: number;
   success_count: number;
   fail_count: number;
@@ -39,4 +41,5 @@ export interface MemorySnapshotRow {
   word_count: number | null;
   flagged: number;
   flag_reason: string | null;
+  agent_id: string | null;
 }

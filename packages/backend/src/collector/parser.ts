@@ -5,6 +5,7 @@ const AnyEventSchema = z.record(z.string(), z.unknown());
 
 export interface ParsedEvent {
   session_id: string;
+  agent_id?: string;
   timestamp: number;
   type: EventType;
   tool_name: string | null;
@@ -67,6 +68,7 @@ export const parseGatewayPayload = (payload: string): ParsedEvent => {
       session_id,
       timestamp,
       type: normType(event.type ?? event.event ?? event.name),
+      agent_id: (typeof event.agent_id === 'string' && event.agent_id) || (typeof event.agentId === 'string' && event.agentId) || undefined,
       tool_name: toolNameCandidate,
       tool_input: event.input !== undefined ? JSON.stringify(event.input) : null,
       tool_output: event.output !== undefined ? JSON.stringify(event.output) : null,

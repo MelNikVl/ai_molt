@@ -17,27 +17,39 @@ open http://localhost:47778
 ## Architecture
 
 ```text
-                 ┌─────────────────────────────┐
-                 │       OpenClaw Gateway      │
-                 │       ws://127.0.0.1:18789  │
-                 └──────────────┬──────────────┘
-                                │ events
-                    ┌───────────▼───────────┐
-                    │  AgentLens Backend    │
-                    │ Fastify + ws + SQLite │
-                    └───┬───────────────┬───┘
-                        │               │
-                 chokidar memory   chokidar logs
-                        │               │
-                    ┌───▼───────────────▼───┐
-                    │      agentlens.db      │
-                    └───────────┬────────────┘
-                                │ REST + SSE
-                        ┌───────▼────────┐
-                        │ React Dashboard │
-                        │  localhost:47778│
-                        └─────────────────┘
+┌────────────────────────────── User Browser ───────────────────────────────┐
+│ Email login (OTP) -> Session token -> Agent dashboard per linked agent    │
+└──────────────────────────────────┬─────────────────────────────────────────┘
+                                   │
+                        ┌──────────▼──────────┐
+                        │  AgentLens Backend  │
+                        │ Fastify + SQLite    │
+                        ├──────────────────────┤
+                        │ Auth: users/sessions │
+                        │ Pairing: pair code   │
+                        │ Ingest: x-agent-key  │
+                        └───┬───────────────┬──┘
+                            │               │
+                 ws://127.0.0.1:18789   /api/agents/ingest/*
+                     (OpenClaw)          (remote/local agent)
+                            │               │
+                            └───────┬───────┘
+                                    ▼
+                              agentlens.db
 ```
+
+## Agent ↔ Email linking flow
+
+1. User logs in via email code (`/api/auth/request-code`, `/api/auth/verify-code`).
+2. User generates pair code in UI (`/api/agents/pair-code`).
+3. Agent executes one command to connect:
+   ```bash
+   curl -X POST http://localhost:47777/api/agents/connect \
+     -H 'Content-Type: application/json' \
+     -d '{"pair_code":"<code>","agent_id":"openclaw-main"}'
+   ```
+4. Agent receives `api_key` and can push events to `/api/agents/ingest/event`.
+5. User sees only linked agents after login.
 
 ## Screenshots
 
