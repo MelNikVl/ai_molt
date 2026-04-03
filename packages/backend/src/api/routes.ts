@@ -9,7 +9,7 @@ export const registerRoutes = (
   app: FastifyInstance,
   deps: { db: DbQueries; gateway: GatewayCollector; getLastEventTs: () => number | null }
 ): void => {
-  const clients = new Set<{ write: (payload: string) => void; close: () => void; userId: number }>();
+  const clients = new Set<{ write: (payload: string) => void; close: () => void }>();
 
   const requireUser = (req: FastifyRequest, reply: FastifyReply): req is AuthedRequest => {
     const auth = req.headers.authorization;
@@ -227,8 +227,6 @@ export const registerRoutes = (
 
   app.get('/api/stream', async (req, reply) => {
     if (!requireUser(req, reply)) return;
-    const authed = req as AuthedRequest;
-
     reply.raw.writeHead(200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
@@ -237,8 +235,7 @@ export const registerRoutes = (
 
     const client = {
       write: (payload: string) => reply.raw.write(payload),
-      close: () => reply.raw.end(),
-      userId: authed.userId
+      close: () => reply.raw.end()
     };
     clients.add(client);
     reply.raw.write('event: hello\ndata: {"ok":true}\n\n');

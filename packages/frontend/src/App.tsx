@@ -17,17 +17,18 @@ export default function App() {
   const [selectedAgent, setSelectedAgent] = useState<string>();
 
   const token = getToken();
-  const me = useMe();
+  const isAuthed = Boolean(token);
+  const me = useMe(isAuthed);
   const agentId = useMemo(() => selectedAgent ?? me.data?.agents?.[0]?.agent_id, [selectedAgent, me.data]);
 
-  const status = useStatus(agentId).data;
-  const events = useEvents(agentId).data;
-  const toolStats = useToolStats(agentId).data;
-  const toolTimeline = useToolTimeline(agentId).data;
-  const memoryFiles = useMemoryFiles(agentId).data;
-  const memoryFile = useMemoryFile(selectedFile, agentId).data;
+  const status = useStatus(agentId, isAuthed).data;
+  const events = useEvents(agentId, undefined, isAuthed).data;
+  const toolStats = useToolStats(agentId, isAuthed).data;
+  const toolTimeline = useToolTimeline(agentId, isAuthed).data;
+  const memoryFiles = useMemoryFiles(agentId, isAuthed).data;
+  const memoryFile = useMemoryFile(selectedFile, agentId, isAuthed).data;
 
-  if (!token) {
+  if (!isAuthed) {
     return <AuthPanel onAuthed={() => setAuthTick((x) => x + 1)} key={authTick} />;
   }
 
