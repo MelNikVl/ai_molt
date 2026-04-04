@@ -1,0 +1,16 @@
+{
+  "name": "agentlens",
+  "version": "0.1.0",
+  "private": true,
+  "description": "See what your OpenClaw agent actually does.",
+  "packageManager": "pnpm@10.17.0",
+  "scripts": {
+    "dev": "concurrently -n backend,frontend -c blue,magenta \"pnpm --filter @agentlens/backend dev\" \"pnpm --filter @agentlens/frontend dev\"",
+    "build": "pnpm --filter @agentlens/frontend build && pnpm --filter @agentlens/backend build",
+    "start": "pnpm --filter @agentlens/backend start",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
