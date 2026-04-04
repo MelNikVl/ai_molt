@@ -10,7 +10,12 @@ const ConfigSchema = z.object({
   db_path: z.string().default('~/.agentlens/agentlens.db'),
   api_port: z.number().int().default(47777),
   frontend_port: z.number().int().default(47778),
-  log_level: z.enum(['debug', 'info', 'warn', 'error']).default('info')
+  log_level: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
+  smtp_host: z.string().default(''),
+  smtp_port: z.number().int().default(587),
+  smtp_user: z.string().default(''),
+  smtp_pass: z.string().default(''),
+  smtp_from: z.string().default('')
 });
 
 export type AgentLensConfig = z.infer<typeof ConfigSchema>;
@@ -44,7 +49,12 @@ export const loadConfig = (): AgentLensConfig => {
     db_path: '~/.agentlens/agentlens.db',
     api_port: 47777,
     frontend_port: 47778,
-    log_level: 'info'
+    log_level: 'info',
+    smtp_host: '',
+    smtp_port: 587,
+    smtp_user: '',
+    smtp_pass: '',
+    smtp_from: ''
   };
 
   let fileConfig: Partial<AgentLensConfig> = {};

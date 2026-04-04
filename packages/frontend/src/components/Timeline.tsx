@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { FixedSizeList as List } from 'react-window';
 import { format } from 'date-fns';
-import { getToken } from '../lib/api';
+import { getToken, toApiUrl } from '../lib/api';
 
 const colorFor = (type: string, success: number | null) => {
   if (type === 'heartbeat') return 'text-slate-400';
@@ -20,7 +20,7 @@ export function Timeline({ initialEvents }: { initialEvents: any[] }) {
 
   useEffect(() => {
     const token = getToken();
-    const source = new EventSource(`/api/stream?token=${encodeURIComponent(token ?? '')}`);
+    const source = new EventSource(toApiUrl(`/api/stream?token=${encodeURIComponent(token ?? '')}`));
     source.onmessage = (msg) => {
       try {
         const event = JSON.parse(msg.data);

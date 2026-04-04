@@ -1,15 +1,27 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
+import nodemailer from 'nodemailer';
 import type { DbQueries } from '../db/queries.js';
 import type { GatewayCollector } from '../collector/gateway.js';
+import type { AgentLensConfig } from '../config.js';
 
 type AuthedRequest = FastifyRequest & { userId: number; agentId?: string };
 
 export const registerRoutes = (
   app: FastifyInstance,
-  deps: { db: DbQueries; gateway: GatewayCollector; getLastEventTs: () => number | null }
+  deps: { db: DbQueries; gateway: GatewayCollector; getLastEventTs: () => number | null; config: AgentLensConfig }
 ): void => {
   const clients = new Set<{ write: (payload: string) => void; close: () => void }>();
+
+  const mailConfigured = Boolean(deps.config.smtp_host && deps.config.smtp_user && deps.config.smtp_pass && deps.config.smtp_from);
+  const transporter = mailConfigured
+    ? nodemailer.createTransport({
+        host: deps.config.smtp_host,
+        port: deps.config.smtp_port,
+        secure: deps.config.smtp_port === 465,
+        auth: { user: deps.config.smtp_user, pass: deps.config.smtp_pass }
+      })
+    : null;
 
   const requireUser = (req: FastifyRequest, reply: FastifyReply): req is AuthedRequest => {
     const auth = req.headers.authorization;
@@ -47,12 +59,29 @@ export const registerRoutes = (
   app.post('/api/auth/request-code', async (req) => {
     const { email } = z.object({ email: z.string().email() }).parse(req.body);
     const { code, expiresAt } = deps.db.createAuthCode(email);
-    app.log.info({ email, code }, 'AgentLens login code');
+
+    if (transporter) {
+      await transporter.sendMail({
+        from: deps.config.smtp_from,
+        to: email,
+        subject: 'AgentLens login code',
+        text: `Your AgentLens code: ${code}. Expires in 10 minutes.`
+      });
+      return {
+        ok: true,
+        delivery: 'smtp',
+        expires_at: expiresAt,
+        message: 'Код отправлен на почту.'
+      };
+    }
+
+    app.log.info({ email, code }, 'AgentLens login code (dev fallback)');
     return {
       ok: true,
       delivery: 'console',
       expires_at: expiresAt,
-      message: 'Код входа отправлен (в dev режиме смотрите backend логи).'
+      dev_code: code,
+      message: 'SMTP не настроен, dev-код возвращен в ответе и логах.'
     };
   });
 

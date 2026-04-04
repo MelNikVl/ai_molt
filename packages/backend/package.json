@@ -16,7 +16,8 @@
     "chokidar": "^4.0.3",
     "fastify": "^5.6.1",
     "ws": "^8.18.3",
-    "zod": "^4.1.11"
+    "zod": "^4.1.11",
+    "nodemailer": "^7.0.5"
   },
   "devDependencies": {
     "@types/node": "^24.6.0",

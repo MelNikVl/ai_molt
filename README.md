@@ -72,3 +72,24 @@ open http://localhost:47778
 ## License
 
 MIT
+
+## Troubleshooting login (email button)
+
+If `Send code` does nothing or you see `404 /api/auth/request-code`:
+
+1. Ensure backend is running on `http://localhost:47777`.
+2. Frontend now calls API directly at `http://localhost:47777` by default (no proxy dependency).
+3. Optional env override: set `VITE_API_BASE` for frontend API host.
+4. For real email delivery configure SMTP in `~/.agentlens/config.json`:
+
+```json
+{
+  "smtp_host": "smtp.yandex.ru",
+  "smtp_port": 465,
+  "smtp_user": "you@yandex.ru",
+  "smtp_pass": "app-password",
+  "smtp_from": "AgentLens <you@yandex.ru>"
+}
+```
+
+Without SMTP, backend returns `dev_code` in API response and logs it.

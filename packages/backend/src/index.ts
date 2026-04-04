@@ -39,7 +39,7 @@ if (fs.existsSync(config.openclaw_logs)) {
 
 const app = Fastify({ logger: true });
 await app.register(cors, { origin: true });
-registerRoutes(app, { db, gateway, getLastEventTs: () => lastEventTs });
+registerRoutes(app, { db, gateway, getLastEventTs: () => lastEventTs, config });
 
 const publicDir = path.resolve('public');
 if (fs.existsSync(publicDir)) {
